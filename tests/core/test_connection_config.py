@@ -1287,6 +1287,23 @@ def test_clickhouse(make_config):
     assert not config3._static_connection_kwargs["compress"]
 
 
+def test_clickhouse_insert_quorum(make_config):
+    base = dict(type="clickhouse", host="localhost", username="default", password="default")
+
+    config = make_config(**base, cluster="default")
+    assert config._static_connection_kwargs["insert_quorum"] == "auto"
+
+    user_settings = {"insert_quorum": 4}
+    config = make_config(**base, cluster="default", connection_settings=user_settings)
+    assert config._static_connection_kwargs["insert_quorum"] == 4
+    # the user's settings must not be mutated
+    assert user_settings == {"insert_quorum": 4}
+    assert config.connection_settings == {"insert_quorum": 4}
+
+    config = make_config(**base, connection_settings={"insert_quorum": 2})
+    assert config._static_connection_kwargs["insert_quorum"] == 2
+
+
 def test_athena(make_config):
     config = make_config(type="athena", work_group="primary")
     assert isinstance(config, AthenaConnectionConfig)
